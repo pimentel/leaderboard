@@ -5,7 +5,7 @@ source('configuration.R')
 
 shinyUI(
   fluidPage(
-    titlePanel('paper reading club leaderboard'),
+    titlePanel('leaderboard'),
     fluidRow(
       tabsetPanel(
         tabPanel('leaderboard',
