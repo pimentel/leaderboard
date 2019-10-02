@@ -82,9 +82,6 @@ plot_network = function(papers, community = FALSE) {
   }
 }
 
-# plot_network(papers)
-# plot_network(papers, TRUE)
-
 update_doi_info <- function(doi) {
   doi_info <- gs_read(prc, 'read_only_doi')
   doi_info <- as.data.frame(doi_info)
@@ -154,9 +151,15 @@ aggregate_by_date = function(p, type) {
 # p = p + geom_line()
 # p
 
+in_campaign = function(date, which_campaign) {
+  stopifnot(nrow(which_campaign) == 1)
+  which_campaign$start <= date & date <= which_campaign$stop
+}
+
+
 prc <- gs_url(SHEET_URL)
 
-papers <- gs_read(prc, 'read')
+papers <- gs_read(prc, 'read', col_types = 'ccccc')
 papers <- mutate(papers, doi = sapply(doi, sanitize_link), date = convert_date(date))
 papers <- mutate(papers, day = yday(date), week = week(date),
   month = month(date), year = year(date))
@@ -164,15 +167,10 @@ papers <- mutate(papers, day = yday(date), week = week(date),
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
   "#D55E00", "#CC79A7")
 
-in_campaign = function(date, which_campaign) {
-  stopifnot(nrow(which_campaign) == 1)
-  which_campaign$start <= date & date <= which_campaign$stop
-}
-
-# user_count <- group_by(papers, handle)
-# user_count <- dplyr::filter(user_count, in_campaign(date, default_current_campaign))
-# user_count <- summarize(user_count, n = length(doi))
-# user_count
+user_count <- group_by(papers, handle)
+user_count <- dplyr::filter(user_count, in_campaign(date, default_current_campaign))
+user_count <- summarize(user_count, n = length(doi))
+user_count
 
 
 doi_count <- group_by(papers, doi)
