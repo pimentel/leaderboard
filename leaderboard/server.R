@@ -58,7 +58,6 @@ get_interactions = function(p) {
   interactions
 }
 
-# debugonce(get_interactions)
 plot_network = function(papers, community = FALSE) {
   library('igraph')
   interactions = get_interactions(papers)
@@ -123,8 +122,6 @@ sanitize_link <- function(doi) {
   doi
 }
 
-# TODO: convert dates
-# as.Date(as.POSIXct(1567790258, origin="1970-01-01"))
 convert_date = function(d) {
   ret = rep(as.Date(NA), length(d))
   for (i in 1:length(d)) {
@@ -145,17 +142,11 @@ aggregate_by_date = function(p, type) {
   p = mutate(p, n_total = cumsum(n))
   p
 }
-# tmp = aggregate_by_date(papers, 'week')
-
-# p = ggplot(tmp, aes(week, n_total, color = handle))
-# p = p + geom_line()
-# p
 
 in_campaign = function(date, which_campaign) {
   stopifnot(nrow(which_campaign) == 1)
   which_campaign$start <= date & date <= which_campaign$stop
 }
-
 
 prc <- gs_url(SHEET_URL)
 
@@ -167,18 +158,16 @@ papers <- mutate(papers, day = yday(date), week = week(date),
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
   "#D55E00", "#CC79A7")
 
-user_count <- group_by(papers, handle)
-user_count <- dplyr::filter(user_count, in_campaign(date, default_current_campaign))
-user_count <- summarize(user_count, n = length(doi))
-user_count
-
+# user_count <- group_by(papers, handle)
+# user_count <- dplyr::filter(user_count, in_campaign(date, default_current_campaign))
+# user_count <- summarize(user_count, n = length(doi))
+# user_count
 
 doi_count <- group_by(papers, doi)
 doi_count <- summarize(doi_count, n = length(doi), who = paste(handle, collapse = ' '),
   recommendation = paste(recommend, collapse = ' '))
 doi_count <- arrange(doi_count, desc(n))
 
-# debugonce(update_doi_info)
 update_doi_info(papers$doi)
 
 doi_info <- gs_read(prc, 'read_only_doi')
@@ -211,12 +200,6 @@ count_words = function(text) {
   d <- data.frame(word = names(v),freq=v)
   d
 }
-
-# playground
-# count_words(papers$comments) %>% head
-# shiny::runApp()
-# TODO: most commonly read authors
-# end playground
 
 shinyServer(function(input, output, session) {
 
@@ -315,6 +298,7 @@ shinyServer(function(input, output, session) {
     p = ggplot(df, aes(week, n_total, color = handle))
     p = p + geom_line()
     p = p + geom_point()
+    p = p + ylab('number of papers')
     p
   })
 
