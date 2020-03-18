@@ -21,8 +21,13 @@ shape_doi <- function(cpj) {
     authors = NA)
   if (!is.null(cpj)) {
     res$url <- paste0('https://doi.org/', cpj$DOI)
-    res$title <- cpj$title
-    res$authors <- paste0(paste0(cpj$author$given, ' ', cpj$author$family), collapse = ', ')
+    if (!is.null(cpj$title)) {
+      res$title <- cpj$title
+    }
+    if (!is.null(cpj$author)) {
+      res$authors <- paste0(
+        paste0(cpj$author$given, ' ', cpj$author$family), collapse = ', ')
+    }
   }
   res
 }
@@ -88,7 +93,25 @@ update_doi_info <- function(doi) {
   new_doi <- setdiff(doi, doi_info$doi)
   if (length(new_doi) > 0) {
     print(paste0('updating ', length(new_doi), ' record'))
-    cr_result <- cr_cn(dois = new_doi, format = 'citeproc-json')
+    success = FALSE
+    tryCatch(
+      {
+        cr_result <- cr_cn(dois = new_doi, format = 'citeproc-json')
+        success = TRUE
+      },
+      warning = function(w) {
+        warning(w)
+        message(paste0('TRYING AGAIN!', new_doi))
+        cr_result <- cr_cn(dois = new_doi, format = 'citeproc-json-ish')
+      },
+      error = function(e) {
+        warning(e)
+      },
+      finally = {
+      })
+    # if (!success) {
+    # }
+
     # print(cr_result)
     if (length(cr_result) == 0)  {
       cr_result <- vector('list', length(new_doi))
@@ -168,6 +191,8 @@ doi_count <- summarize(doi_count, n = length(doi), who = paste(handle, collapse 
   recommendation = paste(recommend, collapse = ' '))
 doi_count <- arrange(doi_count, desc(n))
 
+
+# debugonce(update_doi_info)
 update_doi_info(papers$doi)
 
 doi_info <- gs_read(prc, 'read_only_doi')
